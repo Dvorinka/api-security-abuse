@@ -17,7 +17,7 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "[security] ", log.LstdFlags)
 
-	port := envString("PORT", "8090")
+	port := envString("PORT", "30014")
 	apiKey := envString("SECURITY_API_KEY", "dev-security-key")
 	if apiKey == "dev-security-key" {
 		logger.Println("SECURITY_API_KEY not set, using default development key")
