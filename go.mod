@@ -1,4 +1,4 @@
-module security-abuse
+module apiservices/security-abuse
 
 go 1.25.7
 
