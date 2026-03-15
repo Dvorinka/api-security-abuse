@@ -1,0 +1,245 @@
+openapi: 3.0.3
+info:
+  title: Security Abuse Detection API
+  description: API for detecting security threats and abuse patterns from IP addresses and requests
+  version: 1.0.0
+  contact:
+    name: API Services
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8090
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the service
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /v1/security/analyze:
+    post:
+      summary: Analyze security event
+      description: Analyze a single security event for abuse patterns and risk assessment
+      tags:
+        - Security Analysis
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeInput'
+      responses:
+        '200':
+          description: Successful security analysis response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyzeResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/security/analyze/batch:
+    post:
+      summary: Analyze multiple security events
+      description: Analyze multiple security events for abuse patterns and risk assessment
+      tags:
+        - Security Analysis
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchAnalyzeInput'
+      responses:
+        '200':
+          description: Successful batch analysis response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalyzeResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    AnalyzeInput:
+      type: object
+      required:
+        - ip
+      properties:
+        ip:
+          type: string
+          description: IP address to analyze
+          example: "192.168.1.1"
+        path:
+          type: string
+          description: Request path
+          example: "/api/users"
+        user_agent:
+          type: string
+          description: User agent string
+          example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+          example: "2023-01-01T12:00:00Z"
+
+    BatchAnalyzeInput:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          description: Array of security events to analyze
+          minItems: 1
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/AnalyzeInput'
+
+    AnalyzeResult:
+      type: object
+      properties:
+        ip:
+          type: string
+          description: IP address that was analyzed
+          example: "192.168.1.1"
+        request_count_1m:
+          type: integer
+          description: Number of requests in the last minute
+          example: 150
+        request_count_5m:
+          type: integer
+          description: Number of requests in the last 5 minutes
+          example: 650
+        unique_paths_5m:
+          type: integer
+          description: Number of unique paths accessed in the last 5 minutes
+          example: 12
+        unique_user_agents_5m:
+          type: integer
+          description: Number of unique user agents in the last 5 minutes
+          example: 3
+        average_interval_ms:
+          type: number
+          format: float
+          description: Average interval between requests in milliseconds
+          example: 250.5
+        burst_score:
+          type: number
+          format: float
+          description: Burst detection score
+          example: 8.5
+        bot_probability:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Probability that the requests are from a bot
+          example: 0.75
+        abuse_likelihood:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Likelihood of abusive behavior
+          example: 0.85
+        risk_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Overall risk score
+          example: 85
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Risk level classification
+          example: "high"
+        recommended_action:
+          type: string
+          description: Recommended security action
+          enum: [monitor, rate_limit, block, investigate]
+          example: "rate_limit"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "ip is required"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key for authentication (format: "Bearer YOUR_API_KEY")
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Security Analysis
+    description: Security threat and abuse detection functionality
